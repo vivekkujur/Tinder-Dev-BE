@@ -5,12 +5,18 @@ const app = express();
 
 const { adminAuth } = require("./utils/authMiddleware");
 const UserModel = require("./models/user");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
   const user = new UserModel(req.body);
   //   console.log(req.body);
+  //validate request
+
+  // encrypt password
+  const hash = await bcrypt.hash(user.password, 10);
+  user.password = hash;
 
   try {
     await user.save();
@@ -21,8 +27,30 @@ app.post("/signup", async (req, res) => {
     res.status(400).send("Error saving user to database " + err.message);
   }
 });
-//get user by email
+//Login
+app.get("/login", async (req, res) => {
+  const getEmailId = req.body.email;
+  const password = req.body.password;
 
+  try {
+    const user = await UserModel.findOne({ email: getEmailId });
+    console.log("user", user);
+    if (user == null) {
+      res.status(400).send("User not registered , please signup");
+    } else {
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
+      if (isPasswordMatch) {
+        res.send("Login successful");
+      } else {
+        res.status(400).send("User not registered , please signup");
+      }
+    }
+  } catch (err) {
+    res.status(400).send("Something whent wrong");
+  }
+});
+
+//get user by email`~
 app.get("/user", async (req, res) => {
   const getEmailId = req.body.email;
   console.log("getEmailId", getEmailId);
