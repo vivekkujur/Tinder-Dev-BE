@@ -6,6 +6,8 @@ const app = express();
 const { adminAuth } = require("./utils/authMiddleware");
 const UserModel = require("./models/user");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 app.use(express.json());
 
@@ -39,8 +41,14 @@ app.get("/login", async (req, res) => {
       res.status(400).send("User not registered , please signup");
     } else {
       const isPasswordMatch = await bcrypt.compare(password, user.password);
+      const token = jwt.sign(JSON.stringify(user), process.env.TOKEN_SECRET);
+
       if (isPasswordMatch) {
-        res.send("Login successful");
+        const data = {
+          message: "Login successful",
+          accessToken: token,
+        };
+        res.send(data);
       } else {
         res.status(400).send("User not registered , please signup");
       }
