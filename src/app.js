@@ -4,50 +4,56 @@ const connectDb = require("./config/databse");
 const app = express();
 
 const { adminAuth } = require("./utils/authMiddleware");
+const { verifyJWt } = require("./utils/verifyJwtMiddleware");
+
+const { validateSignupData } = require("./helper/validationSignupData");
 const UserModel = require("./models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+var cookieParser = require("cookie-parser");
+
 require("dotenv").config();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
-  const user = new UserModel(req.body);
-  //   console.log(req.body);
-  //validate request
-
-  // encrypt password
-  const hash = await bcrypt.hash(user.password, 10);
-  user.password = hash;
-
   try {
+    const { firstName, lastName, email, password } = req.body;
+
+    //validate request
+    validateSignupData(req);
+    // encrypt password
+    const hash = await bcrypt.hash(password, 10);
+
+    const user = new UserModel({ firstName, lastName, email, password: hash });
+
     await user.save();
-    // throw new Error("this is error");
     res.send("user created successfully");
   } catch (err) {
     console.log("error is getting handled");
-    res.status(400).send("Error saving user to database " + err.message);
+    res.status(400).send("Error saving user to database. " + err.message);
   }
 });
 //Login
-app.get("/login", async (req, res) => {
+app.post("/login", async (req, res) => {
   const getEmailId = req.body.email;
   const password = req.body.password;
 
   try {
     const user = await UserModel.findOne({ email: getEmailId });
-    console.log("user", user);
     if (user == null) {
       res.status(400).send("User not registered , please signup");
     } else {
       const isPasswordMatch = await bcrypt.compare(password, user.password);
-      const token = jwt.sign(JSON.stringify(user), process.env.TOKEN_SECRET);
+      const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET);
 
       if (isPasswordMatch) {
         const data = {
           message: "Login successful",
           accessToken: token,
         };
+        res.cookie("accessToken", token);
         res.send(data);
       } else {
         res.status(400).send("User not registered , please signup");
@@ -86,6 +92,17 @@ app.get("/feed", async (req, res) => {
     }
   } catch (err) {
     res.status(400).send("Something whent wrong");
+  }
+});
+
+//get profile by Id
+app.get("/profile", verifyJWt, async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("Something whent wrong : " + err.message);
   }
 });
 
