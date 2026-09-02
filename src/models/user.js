@@ -1,5 +1,6 @@
 const { Timestamp } = require("mongodb");
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 const userSchema = mongoose.Schema(
   {
@@ -25,10 +26,28 @@ const userSchema = mongoose.Schema(
       required: true,
     },
     age: {
-      type: Number,
+      type: String,
     },
     gender: {
       type: String,
+    },
+    photoUrl: {
+      required: false,
+      type: String,
+      default: "https://picsum.photos/536/354",
+      validate(value) {
+        if (!validator.isURL(value)) {
+          throw new Error("invalid photo url: " + value);
+        }
+      },
+    },
+    about: {
+      type: String,
+      default: "this is default about of this user ",
+    },
+
+    skills: {
+      type: [String],
     },
   },
   {

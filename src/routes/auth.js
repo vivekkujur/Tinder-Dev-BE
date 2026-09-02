@@ -1,8 +1,9 @@
 const express = require("express");
-const { validateSignupData } = require("../helper/validationSignupData");
+const { validateSignupData } = require("../helper/validate");
 const UserModel = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { verifyJWt } = require("../utils/verifyJwtMiddleware");
 
 const authRouter = express.Router();
 
@@ -50,6 +51,19 @@ authRouter.post("/login", async (req, res) => {
     }
   } catch (err) {
     res.status(400).send("Something whent wrong");
+  }
+});
+
+authRouter.get("/logout", (req, res) => {
+  try {
+    // res.clearCookie("accessToken");
+
+    res.cookie("accessToken", null, {
+      expires: new Date(Date.now()),
+    });
+    res.send("User logout successfully");
+  } catch (e) {
+    res.status(400).send("User not registered , please signup. " + e.message);
   }
 });
 module.exports = authRouter;
