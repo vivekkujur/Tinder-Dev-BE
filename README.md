@@ -11,6 +11,11 @@ This is the backend project for "Dev Tinder," a platform for developers to conne
 - Middleware for admin authorization
 - Modular code structure for scalability
 
+## Routes
+
+- app.use("/", authRouter);
+- app.use("/", profileRouter);
+- app.use("/", requestRouter);
 
 ## Prerequisites
 
@@ -23,12 +28,12 @@ This is the backend project for "Dev Tinder," a platform for developers to conne
    git clone <repository-url>
 
 2. Navigate to the project directory:
-  cd dev-tinder-backend
+   cd dev-tinder-backend
 
 3. Install dependencies:
-    npm install
+   npm install
 
 ## Usage
 
 1. Start the Server  
-  npm start
+   npm start

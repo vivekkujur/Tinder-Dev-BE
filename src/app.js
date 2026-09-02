@@ -3,108 +3,19 @@ const connectDb = require("./config/databse");
 
 const app = express();
 
-const { adminAuth } = require("./utils/authMiddleware");
-const { verifyJWt } = require("./utils/verifyJwtMiddleware");
-
-const { validateSignupData } = require("./helper/validationSignupData");
-const UserModel = require("./models/user");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 var cookieParser = require("cookie-parser");
 
 require("dotenv").config();
-
 app.use(express.json());
 app.use(cookieParser());
 
-app.post("/signup", async (req, res) => {
-  try {
-    const { firstName, lastName, email, password } = req.body;
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
-    //validate request
-    validateSignupData(req);
-    // encrypt password
-    const hash = await bcrypt.hash(password, 10);
-
-    const user = new UserModel({ firstName, lastName, email, password: hash });
-
-    await user.save();
-    res.send("user created successfully");
-  } catch (err) {
-    console.log("error is getting handled");
-    res.status(400).send("Error saving user to database. " + err.message);
-  }
-});
-//Login
-app.post("/login", async (req, res) => {
-  const getEmailId = req.body.email;
-  const password = req.body.password;
-
-  try {
-    const user = await UserModel.findOne({ email: getEmailId });
-    if (user == null) {
-      res.status(400).send("User not registered , please signup");
-    } else {
-      const isPasswordMatch = await bcrypt.compare(password, user.password);
-      const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET);
-
-      if (isPasswordMatch) {
-        const data = {
-          message: "Login successful",
-          accessToken: token,
-        };
-        res.cookie("accessToken", token);
-        res.send(data);
-      } else {
-        res.status(400).send("User not registered , please signup");
-      }
-    }
-  } catch (err) {
-    res.status(400).send("Something whent wrong");
-  }
-});
-
-//get user by email`~
-app.get("/user", async (req, res) => {
-  const getEmailId = req.body.email;
-  console.log("getEmailId", getEmailId);
-
-  try {
-    const user = await UserModel.find({ email: getEmailId });
-    if (user.length === 0) {
-      res.status(400).send("User not found");
-    } else {
-      res.send(user);
-    }
-  } catch (err) {
-    res.status(400).send("Something whent wrong");
-  }
-});
-
-//feed api - get all user from datatbase
-app.get("/feed", async (req, res) => {
-  try {
-    const user = await UserModel.find({});
-    if (user.length === 0) {
-      res.status(400).send("No users found, please add dev tinder users");
-    } else {
-      res.send(user);
-    }
-  } catch (err) {
-    res.status(400).send("Something whent wrong");
-  }
-});
-
-//get profile by Id
-app.get("/profile", verifyJWt, async (req, res, next) => {
-  try {
-    const user = req.user;
-
-    res.send(user);
-  } catch (err) {
-    res.status(400).send("Something whent wrong : " + err.message);
-  }
-});
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
 connectDb()
   .then(() => {
@@ -116,6 +27,41 @@ connectDb()
   .catch((err) => {
     console.log("connection established failed ");
   });
+
+//Login
+
+//get user by email`~
+// app.get("/user", async (req, res) => {
+//   const getEmailId = req.body.email;
+//   console.log("getEmailId", getEmailId);
+
+//   try {
+//     const user = await UserModel.find({ email: getEmailId });
+//     if (user.length === 0) {
+//       res.status(400).send("User not found");
+//     } else {
+//       res.send(user);
+//     }
+//   } catch (err) {
+//     res.status(400).send("Something whent wrong");
+//   }
+// });
+
+//   //feed api - get all user from datatbase
+//   app.get("/feed", async (req, res) => {
+//     try {
+//       const user = await UserModel.find({});
+//       if (user.length === 0) {
+//         res.status(400).send("No users found, please add dev tinder users");
+//       } else {
+//         res.send(user);
+//       }
+//     } catch (err) {
+//       res.status(400).send("Something whent wrong");
+//     }
+//   });
+
+//   //get profile by Id
 
 // app.get(
 //   "/user",
