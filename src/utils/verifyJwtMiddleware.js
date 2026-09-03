@@ -6,7 +6,6 @@ const verifyJWt = async (req, res, next) => {
     const cookie = req.cookies;
 
     const { accessToken } = cookie;
-    console.log(accessToken);
     if (!accessToken) {
       throw new Error("Access token not found");
     }

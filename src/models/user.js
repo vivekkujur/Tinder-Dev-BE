@@ -30,6 +30,10 @@ const userSchema = mongoose.Schema(
     },
     gender: {
       type: String,
+      enum: {
+        values: ["male", "female", "others"],
+        message: "{VALUE} is not supported gender",
+      },
     },
     photoUrl: {
       required: false,

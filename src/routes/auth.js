@@ -21,7 +21,6 @@ authRouter.post("/signup", async (req, res) => {
     await user.save();
     res.send("user created successfully");
   } catch (err) {
-    console.log("error is getting handled");
     res.status(400).send("Error saving user to database. " + err.message);
   }
 });
